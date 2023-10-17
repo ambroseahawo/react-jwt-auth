@@ -44,6 +44,45 @@ const Register = () => {
     setErrMsg('')
   },[user, pwd,matchPwd])
 
+
+  const handleSubmit =async(e) => {
+    e.preventDefault()
+
+    const v1 = USER_REGEX.test(user)
+    const v2 = PWD_REGEX.test(pwd)
+
+    if(!v1 || !v2) {
+      setErrMsg("Invalid Entry")
+      return
+    }
+
+    try {
+      const response = await axios.post(REGISTER_URL,JSON.stringify({user, pwd}),
+        {
+          headers: {"Content-Type": "application/json"},
+          withCredentials: true
+        }
+      )
+      // console.log(response?.data)
+      // console.log(response?.accessToken)
+      // console.log(JSON.stringify(response))
+      setSuccess(true)
+
+      setUser('')
+      setPwd('')
+      setMatchPwd('')
+    } catch (error) {
+      if(!error?.response){
+        setErrMsg("No server response")
+      }else if (error.response?.status === 409){
+        setErrMsg("Username Taken")
+      }else{
+        setErrMsg("Registration Failed")
+      }
+      errRef.current.focus()
+    }
+  }
+
   return (
     <React.Fragment>
       {success ? (
@@ -57,7 +96,7 @@ const Register = () => {
         <section>
           <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
           <h1>Register</h1>
-          <form>
+          <form onSubmit={handleSubmit}>
             <label htmlFor="username">
               Username:
               <FontAwesomeIcon icon={faCheck} className={validName ? "valid": "hide"} />
